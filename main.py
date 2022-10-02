@@ -1,5 +1,5 @@
 #-*-coding:utf8;-*-
-#v0.1.0
+#v0.2.0
 
 
 #účet
@@ -13,6 +13,12 @@ pin = ""
 days = 3
 # Počet dní zpětně (0-7)
 days_back = 1
+
+
+# Seznam vlastních kanálů
+# Seznam id kanálů oddělené čárkou (např.: "ct1,ct2")
+# Pro všechny kanály ponechte prázdné ("")
+ids =""
 
 
 import requests
@@ -127,6 +133,11 @@ if req["status"] == 1:
     f.write("#EXTM3U\n")
     groups = req["groups"]
     data = req["channels"]
+    if ids == "":
+        for i in data:
+            ch.append(i["id"])
+    else:
+        ch = ids.split(",")
     for d in data:
         if d["locked"] == "none":
             if d["type"] == "radio":
@@ -134,10 +145,10 @@ if req["status"] == 1:
             else:
                 radio = ' '
             group = 'group-title="' + groups[d["group"]] + '"'
-            f.write('#EXTINF:-1 ' + group + radio 
+            if d["id"] in ch:
+                f.write('#EXTINF:-1 ' + group + radio 
  + 'tvg-logo="' + d["logoUrl"] + '" tvg-id="stv-' + d["id"] + '",'+ d["name"] +'\n' + d["url"] + '\n')
-            ch.append(d["id"])
-            channels.append({'display-name': [(d["name"], u'cs')], 'id': 'stv-' + d["id"],'icon': [{'src': 'https://sledovanitv.cz/cache/biglogos/' + d["id"] + '.png'}]})
+                channels.append({'display-name': [(d["name"], u'cs')], 'id': 'stv-' + d["id"],'icon': [{'src': 'https://sledovanitv.cz/cache/biglogos/' + d["id"] + '.png'}]})
     f.close()
     print(colors.green("OK"))
 else:
@@ -171,7 +182,7 @@ if days > 0:
                 if programm not in programmes:
                     programmes.append(programm)
         print(colors.green("OK"))
-    print("\nEPG:. ", end="", flush=True)
+    print("\nEPG: ", end="", flush=True)
     w = xmltv.Writer(encoding="utf-8", source_info_url="http://www.funktronics.ca/python-xmltv", source_info_name="Funktronics", generator_info_name="python-xmltv", generator_info_url="http://www.funktronics.ca/python-xmltv")
     for c in channels:
         w.addChannel(c)
